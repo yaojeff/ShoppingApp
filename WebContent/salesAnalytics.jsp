@@ -100,7 +100,7 @@
 			<%
 			for(SalesAnalyticsModel entity : header) {
 				%>
-				<td><b><%=entity.getName() %></b><br/>{$<%=entity.getSum() %>}</td>		
+				<td><center><b><%=entity.getHName() %></b><br/>{$<%=entity.getSum() %>}</center></td>		
 				<%
 			}
 			%></tr>
@@ -117,8 +117,8 @@
 					nameCheck = entity.getName();
 					%>
 					<tr>
-					<td><b><%=entity.getName()%></b><br/>
-					{$<%=entity.getSum()%>}</td>
+					<td><center><b><%=entity.getName()%></b><br/>
+					{$<%=entity.getSum()%>}</center></td>
 					
 					<% 
 					endOfRow = false;
@@ -134,7 +134,7 @@
 				
 				%>
 				<td>
-				$<%=entity.getSum()%></td>
+				<center>$<%=entity.getSum()%></center></td>
 				
 				<% 		
 			}

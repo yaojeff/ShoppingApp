@@ -79,7 +79,7 @@ public class AnalyticsController extends HttpServlet{
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 
 		
-		list = entity.filterB();
+		list = entity.filterB(row_header);
 		System.out.println("list size: " + list.size());
 		return list;
 	}

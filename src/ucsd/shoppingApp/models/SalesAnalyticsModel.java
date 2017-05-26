@@ -7,10 +7,11 @@ public class SalesAnalyticsModel {
 	private String name;
 	private Double sum;
 	
-	public String getName() { 
+	public String getHName() { 
 		if(name.length() > 10) return name.substring(0, 10); 
 		else return name;
 	}
+	public String getName() { return name; }
 	public Double getSum() { return sum; }
 	public void setName(String n) { name = n;}
 	public void setSum(Double s) { sum = s;}

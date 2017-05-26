@@ -97,10 +97,15 @@ public class SalesAnalyticsDAO {
             + " pro.id = pr.product_id AND pro.category_id = ?"
             + " GROUP BY p.id) a on a.name = p.person_name ORDER BY p.person_name";
 	
-	private static final String BODY = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
+	private static final String BODY_CUS = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
 			+ " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro WHERE p.id = s.person_id"
 			+ " AND s.is_purchased = true AND pr.cart_id = s.id AND pro.id = pr.product_id"
 			+ " AND pro.id = ? AND p.person_name = ? GROUP by p.id, pro.id";
+	
+	private static final String BODY_SAT = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
+			+ " FROM person as p, state as st, shopping_cart as s, products_in_cart as pr, product as pro WHERE p.id = s.person_id"
+			+ " AND s.is_purchased = true AND pr.cart_id = s.id AND pro.id = pr.product_id AND st.id = p.state_id"
+			+ " AND pro.id = ? AND st.state_name = ? GROUP by pro.product_name";
 	
 	public SalesAnalyticsDAO(Connection con) {
 		this.rowH = new ArrayList<SalesAnalyticsModel>();
@@ -108,16 +113,21 @@ public class SalesAnalyticsDAO {
 		this.con = con;
 	}
 	
-	public ArrayList<SalesAnalyticsModel> filterB() throws SQLException{
+	public ArrayList<SalesAnalyticsModel> filterB(String row_header) throws SQLException{
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 		ResultSet rs = null;
 		PreparedStatement pstmt = null;
-		System.out.println(BODY);
+		StringBuilder sb = null;
+		if(row_header.equalsIgnoreCase("customer"))
+			sb = new StringBuilder(BODY_CUS);
+		else
+			sb = new StringBuilder(BODY_SAT);
+		System.out.println(sb.toString());
 		for(SalesAnalyticsModel entity : rowH) {
 			list.add(new SalesAnalyticsModel(entity.getName(), entity.getSum()));
 			for(Integer t : header) {
 				try {
-					pstmt = con.prepareStatement(BODY);
+					pstmt = con.prepareStatement(sb.toString());
 					pstmt.setInt(1, t);
 					pstmt.setString(2, entity.getName());
 					rs = pstmt.executeQuery();
