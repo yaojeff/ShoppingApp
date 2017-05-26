@@ -14,8 +14,8 @@ import ucsd.shoppingApp.models.StateAnalyticsModel;
 public class SalesAnalyticsDAO {
 	private Connection con;
 
-	private ArrayList<Integer> header = new ArrayList<Integer>();
-	private ArrayList<SalesAnalyticsModel> rowH = new ArrayList<SalesAnalyticsModel>();
+	private ArrayList<Integer> header;
+	private ArrayList<SalesAnalyticsModel> rowH;
 	
 	private static final String TOPK_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
 			+ " product p LEFT JOIN (SELECT p.product_name, p.id, SUM(pr.price * pr.quantity) as rs"
@@ -103,6 +103,8 @@ public class SalesAnalyticsDAO {
 			+ " AND pro.id = ? AND p.person_name = ? GROUP by p.id, pro.id";
 	
 	public SalesAnalyticsDAO(Connection con) {
+		this.rowH = new ArrayList<SalesAnalyticsModel>();
+		this.header = new ArrayList<Integer>();
 		this.con = con;
 	}
 	
@@ -119,9 +121,12 @@ public class SalesAnalyticsDAO {
 					pstmt.setInt(1, t);
 					pstmt.setString(2, entity.getName());
 					rs = pstmt.executeQuery();
-					while(rs.next()) {
+
+					if(rs.next())
 						list.add(new SalesAnalyticsModel(rs));
-					}
+					else
+						list.add(new SalesAnalyticsModel("et", 0.0));
+					
 				} catch(SQLException e) {
 					e.printStackTrace();
 					throw e;
@@ -289,6 +294,11 @@ public class SalesAnalyticsDAO {
 				}
 			}
 		}			
+	}
+	
+	public void reset() {
+		rowH.clear();
+		header.clear();
 	}
 
 }

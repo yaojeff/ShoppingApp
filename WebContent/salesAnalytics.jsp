@@ -81,10 +81,10 @@
 			}
 			%>
 			<div id="result">
-	<%-- 		<c:if test="${zeroresults==1}">
+			<c:if test="${zeroresults==1}">
 				<h4> No results found </h4>
 			</c:if>
-			<c:if test="${pres==1}">--%>
+			<c:if test="${pres==1}">
 				<table border='10'>
 				
 			<%
@@ -93,7 +93,7 @@
 			if(request.getAttribute("header") != null) 
 				header = (ArrayList<SalesAnalyticsModel>) request.getAttribute("header");
 			if(request.getAttribute("body") != null) 
-				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("list");
+				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("body");
 			//System.out.println(list.size()); TODO remove debuging 
 			%>
 			<tr><td></td>
@@ -106,10 +106,10 @@
 			%></tr>
 			<%
 
-			
-						for(SalesAnalyticsModel entity: list) {
+			//System.out.println("body size: " + list.size());
+			/*for(SalesAnalyticsModel entity: list) {
 				System.out.println(entity.getName() + entity.getSum());
-			}/*
+			}*/
 			String nameCheck = "";
 			boolean endOfRow = true;
 			for(SalesAnalyticsModel entity : list) {
@@ -118,7 +118,7 @@
 					%>
 					<tr>
 					<td><b><%=entity.getName()%></b><br/>
-					<%=entity.getSum()%></td>
+					{$<%=entity.getSum()%>}</td>
 					
 					<% 
 					endOfRow = false;
@@ -133,13 +133,13 @@
 				}				
 				
 				%>
-				<td><b><%=entity.getName()%></b><br/>
+				<td>
 				<%=entity.getSum()%></td>
 				
 				<% 		
-			}*/
+			}
 			%>
-			</table><%-- </c:if>--%></div>
+			</table></c:if></div>
 		</td>
 		</table>
 	<%   

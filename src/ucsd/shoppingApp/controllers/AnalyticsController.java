@@ -80,10 +80,11 @@ public class AnalyticsController extends HttpServlet{
 
 		
 		list = entity.filterB();
-
+		System.out.println("list size: " + list.size());
 		return list;
 	}
 	private ArrayList<SalesAnalyticsModel> Filterhead(String order, int cate_id) throws SQLException{
+		entity.reset();
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 		if(cate_id <= 0) {
 			list = entity.filterH(order);
