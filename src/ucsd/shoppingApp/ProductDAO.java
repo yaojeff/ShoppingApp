@@ -30,6 +30,9 @@ public class ProductDAO {
 			+ " LEFT JOIN products_in_cart on (product.id = products_in_cart.product_id)";
 
 	private static final String DELETE_PRODUCT_BY_ID = "DELETE FROM product WHERE id=?";
+	
+	//private static final String ANALYTIC_PRODUCT_HEADER = "SELECT product.product_name FROM product"
+	
 	private Connection con;
 
 	public ProductDAO(Connection con) {

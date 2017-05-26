@@ -16,20 +16,18 @@ public class SalesAnalyticsDAO {
 	
 	private static final String FILTER_CUSTOMER = "SELECT person.person_name, product.product_name, SUM("
 			+ "products_in_cart.price * products_in_cart.quantity) as rs FROM "
-			+ "person,products_in_cart, shopping_cart, product WHERE "
-			+ "products_in_cart.cart_id = shopping_cart.id"
-			+ " AND shopping_cart.person_id = person.id"
-			+ " AND shopping_cart.is_purchased = true"
-			+ " AND product.id = products_in_cart.product_id";
+			+ "person INNER JOIN shopping_cart as a on person.id = a.person_id"
+			+ " AND a.is_purchased = true, product LEFT JOIN products_in_cart INNER JOIN shopping_cart as b on"
+			+ " b.id = products_in_cart.cart_id"
+			+ " AND b.is_purchased = true on product.id = products_in_cart.product_id";
 	
 	private static final String FILTER_STATE = "SELECT state.state_name, product.product_name, SUM("
 			+ "products_in_cart.price * products_in_cart.quantity) as rs FROM "
-			+ "person,products_in_cart, shopping_cart, product, state WHERE "
-			+ "products_in_cart.cart_id = shopping_cart.id"
-			+ " AND shopping_cart.person_id = person.id"
-			+ " AND shopping_cart.is_purchased = true"
-			+ " AND product.id = products_in_cart.product_id"
-			+ " AND state.id = person.state_id";
+			+ "state INNER JOIN person on person.state_id = state.id"
+			+ " INNER JOIN shopping_cart as a on person.id = a.person_id"
+			+ " AND a.is_purchased = true, product LEFT JOIN products_in_cart INNER JOIN shopping_cart as b on"
+			+ " b.id = products_in_cart.cart_id"
+			+ " AND b.is_purchased = true on product.id = products_in_cart.product_id";
 	
 	public SalesAnalyticsDAO(Connection con) {
 		this.con = con;
@@ -42,16 +40,20 @@ public class SalesAnalyticsDAO {
 		if(header.equalsIgnoreCase("customer")) {
 			sb = new StringBuilder(FILTER_CUSTOMER);
 			if(order.equalsIgnoreCase("alph")) 
-				group = " GROUP BY person.person_name, product.product_name ORDER BY person.person_name";
+				group = " GROUP BY person.person_name, product.product_name ORDER BY "
+						+ "person.person_name, product.product_name";
 			else
-				group = " GROUP BY person.person_name, product.product_name ORDER BY rs DESC";				
+				group = " GROUP BY person.person_name, product.product_name ORDER BY "
+						+ "rs DESC, product.product_name";				
 		}
 		else {
 			sb = new StringBuilder(FILTER_STATE);
 			if(order.equalsIgnoreCase("alph")) 
-				group = " GROUP BY state.state_name, product.product_name ORDER BY state.state_name";
+				group = " GROUP BY state.state_name, product.product_name ORDER BY "
+						+ "state.state_name, product.product_name";
 			else
-				group = " GROUP BY state.state_name, product.product_name ORDER BY rs DESC";			
+				group = " GROUP BY state.state_name, product.product_name ORDER BY "
+						+ "rs DESC, product.product_name";			
 			
 		}
 //		if(cate_id > 0) {

@@ -17,12 +17,7 @@
 			CategoryDAO categoryDao = new CategoryDAO(con);
 			List<CategoryModel> category_list = categoryDao.getCategories();
 			con.close();
-			int category_id = -1;
-			if(request.getSession().getAttribute("sess_category_id") != null) {
-				category_id = Integer.parseInt(request.getSession().getAttribute("sess_category_id").toString());
-			}
-		
-	
+
 	%>
 		<table cellspacing="5">
 			<tr>
@@ -33,7 +28,14 @@
 			<h3>Sales Analytics</h3>
 			<form method="GET" action="AnalyticsController">
 			<%
-			if(request.getSession().getAttribute("sess_first_page") == null ) {%>
+			if(request.getSession().getAttribute("sess_first_page") == null ) {
+				int category_id = -1;
+				if(request.getSession().getAttribute("sess_cate_id") != null) {
+					category_id = (int)request.getSession().getAttribute("sess_cate_id");
+				}
+				System.out.println(category_id);
+			
+			%>
 
 				<table>
 				<tr><td>
@@ -55,8 +57,8 @@
 				<tr><td>
 				Category : 
 				</td><td> 
-				<select name="category">
-					<option selected disabled hidden style='display: none' value="-1">All</option>
+				<select name="cate">
+					<option value="-1">All</option>
 					<%
 						for (CategoryModel cat : category_list) {
 					%>
@@ -90,14 +92,24 @@
 			if(request.getAttribute("list") != null) 
 				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("list");
 			//System.out.println(list.size()); TODO remove debuging 
+			
+			String name = "";
 			for (SalesAnalyticsModel entity : list) {
 				//System.out.println(entity.getCustomer());
+				if(!entity.getName().equals(name)) {
+
+					if(!name.isEmpty())
+						%>
+						</tr>
+					<%name = entity.getName(); %>
+					<tr>
+
+					<td><%=entity.getName() %> </td> <%
+					
+				}
 			%>
-				<tr>
-					<td><%=entity.getName() %> </td>
-					<td><%=entity.getProduct() %> </td>
+				    <td><%=entity.getProduct() %></td>
 					<td><%=entity.getSum() %> </td>	
-				</tr>
 			<%
 			}
 			%>

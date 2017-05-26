@@ -49,7 +49,7 @@ public class AnalyticsController extends HttpServlet{
 				HttpSession session = request.getSession();
 				String row_header = request.getParameter("row_header");
 				String order = request.getParameter("order");
-				int cate_id = Integer.parseInt(request.getParameter("category"));
+				int cate_id = Integer.parseInt(request.getParameter("cate"));
 			
 				ArrayList<SalesAnalyticsModel> list = entity.filterList(row_header, order, cate_id);
 				//System.out.println(list.size()); TODO remove debugging message
@@ -57,9 +57,14 @@ public class AnalyticsController extends HttpServlet{
 				if(zeroresults == false) request.setAttribute("pres", 1);
 				if(zeroresults == true) request.setAttribute("zeroresults", 1);
 				request.setAttribute("list", list);
+				session.setAttribute("sess_cate_id", cate_id);
 				RequestDispatcher rd = request.getRequestDispatcher("salesAnalytics.jsp");
 				rd.forward(request, response);
-			} 	catch (Exception e) {
+			} catch(NumberFormatException e) {
+				request.setAttribute("error", "Invalid Argument");
+				e.printStackTrace();
+			}
+			catch (Exception e) {
 				System.out.println(e.getMessage());
 			}
 		}
