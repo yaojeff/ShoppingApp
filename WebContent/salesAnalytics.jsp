@@ -134,7 +134,7 @@
 				
 				%>
 				<td>
-				<%=entity.getSum()%></td>
+				$<%=entity.getSum()%></td>
 				
 				<% 		
 			}
