@@ -7,7 +7,7 @@ public class SalesAnalyticsModel {
 	private String product;
 	private Double sum;
 	
-	public String getProduct() { return product; }
+	public String getProduct() { if(product.length() > 10) return product.substring(0, 10); else return product;}
 	public Double getSum() { return sum; }
 	public String getName() { return ""; }
 	public void setName(String n) {}
@@ -23,5 +23,11 @@ public class SalesAnalyticsModel {
 			e.printStackTrace();
 			throw e;
 		}
-	}	
+	}
+	
+	public SalesAnalyticsModel(String p, Double s) {
+		product = p;
+		sum = s;
+	}
+
 }

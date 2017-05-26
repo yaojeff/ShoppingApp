@@ -50,13 +50,14 @@ public class AnalyticsController extends HttpServlet{
 				String row_header = request.getParameter("row_header");
 				String order = request.getParameter("order");
 				int cate_id = Integer.parseInt(request.getParameter("cate"));
-			
-				ArrayList<SalesAnalyticsModel> list = entity.filterList(row_header, order, cate_id);
+				ArrayList<SalesAnalyticsModel> header = this.Filterhead(order, cate_id);			
+				ArrayList<SalesAnalyticsModel> list = this.Filterbody(row_header, order, cate_id);
 				//System.out.println(list.size()); TODO remove debugging message
 				if(list.size() == 0) zeroresults = true;
 				if(zeroresults == false) request.setAttribute("pres", 1);
 				if(zeroresults == true) request.setAttribute("zeroresults", 1);
-				request.setAttribute("list", list);
+				request.setAttribute("body", list);
+				request.setAttribute("header", header);
 				session.setAttribute("sess_cate_id", cate_id);
 				RequestDispatcher rd = request.getRequestDispatcher("salesAnalytics.jsp");
 				rd.forward(request, response);
@@ -70,4 +71,22 @@ public class AnalyticsController extends HttpServlet{
 		}
 	}
 	
+	private ArrayList<SalesAnalyticsModel> Filterbody(String row_header, String order, int cate_id) throws SQLException{
+		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
+		if(cate_id <= 0) {
+			list = entity.filterB(row_header, order);
+		} else {
+			list = entity.filterBC(row_header, order, cate_id);
+		}
+		return list;
+	}
+	private ArrayList<SalesAnalyticsModel> Filterhead(String order, int cate_id) throws SQLException{
+		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
+		if(cate_id <= 0) {
+			list = entity.filterH(order);
+		} else {
+			list = entity.filterHC(order, cate_id);
+		}
+		return list;
+	}
 }

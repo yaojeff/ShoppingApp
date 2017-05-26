@@ -81,39 +81,30 @@
 			}
 			%>
 			<div id="result">
-			<c:if test="${zeroresults==1}">
+	<%-- 		<c:if test="${zeroresults==1}">
 				<h4> No results found </h4>
 			</c:if>
-			<c:if test="${pres==1}">
+			<c:if test="${pres==1}">--%>
 				<table border='10'>
 				
 			<%
 			ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
-			if(request.getAttribute("list") != null) 
+			ArrayList<SalesAnalyticsModel> header = new ArrayList<SalesAnalyticsModel>();
+			if(request.getAttribute("header") != null) 
+				header = (ArrayList<SalesAnalyticsModel>) request.getAttribute("header");
+			if(request.getAttribute("body") != null) 
 				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("list");
 			//System.out.println(list.size()); TODO remove debuging 
-			
-			String name = "";
-			for (SalesAnalyticsModel entity : list) {
-				//System.out.println(entity.getCustomer());
-				if(!entity.getName().equals(name)) {
-
-					if(!name.isEmpty())
-						%>
-						</tr>
-					<%name = entity.getName(); %>
-					<tr>
-
-					<td><%=entity.getName() %> </td> <%
-					
-				}
 			%>
-				    <td><%=entity.getProduct() %></td>
-					<td><%=entity.getSum() %> </td>	
+			<tr><td></td>
 			<%
+			for(SalesAnalyticsModel entity : header) {
+				%>
+				<td><b><%=entity.getProduct() %></b><br/>{$<%=entity.getSum() %>}</td>		
+				<%
 			}
-			%>
-			</table></c:if></div>
+			%></tr>
+			</table><%-- </c:if>--%></div>
 		</td>
 		</table>
 	<%   
