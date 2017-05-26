@@ -72,12 +72,15 @@ public class AnalyticsController extends HttpServlet{
 	}
 	
 	private ArrayList<SalesAnalyticsModel> Filterbody(String row_header, String order, int cate_id) throws SQLException{
+		if(row_header.equalsIgnoreCase("customer"))
+			entity.rowQueryCustomer(order, cate_id);
+		else
+			entity.rowQueryState(order, cate_id);
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
-		if(cate_id <= 0) {
-			list = entity.filterB(row_header, order);
-		} else {
-			list = entity.filterBC(row_header, order, cate_id);
-		}
+
+		
+		list = entity.filterB();
+
 		return list;
 	}
 	private ArrayList<SalesAnalyticsModel> Filterhead(String order, int cate_id) throws SQLException{

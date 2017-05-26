@@ -4,19 +4,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SalesAnalyticsModel {
-	private String product;
+	private String name;
 	private Double sum;
 	
-	public String getProduct() { if(product.length() > 10) return product.substring(0, 10); else return product;}
+	public String getName() { 
+		if(name.length() > 10) return name.substring(0, 10); 
+		else return name;
+	}
 	public Double getSum() { return sum; }
-	public String getName() { return ""; }
-	public void setName(String n) {}
-	public void setProduct(String p) { product = p; }
+	public void setName(String n) { name = n;}
 	public void setSum(Double s) { sum = s;}
 	
 	public SalesAnalyticsModel(ResultSet rs) throws SQLException {
 		try {
-			this.product = rs.getString("product_name");
+			this.name = rs.getString("name");
 			this.sum = rs.getDouble("rs");
 			//System.out.println(name);
 		} catch (SQLException e) {
@@ -25,8 +26,8 @@ public class SalesAnalyticsModel {
 		}
 	}
 	
-	public SalesAnalyticsModel(String p, Double s) {
-		product = p;
+	public SalesAnalyticsModel(String n, Double s) {
+		name = n;
 		sum = s;
 	}
 

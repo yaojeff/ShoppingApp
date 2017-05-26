@@ -100,10 +100,45 @@
 			<%
 			for(SalesAnalyticsModel entity : header) {
 				%>
-				<td><b><%=entity.getProduct() %></b><br/>{$<%=entity.getSum() %>}</td>		
+				<td><b><%=entity.getName() %></b><br/>{$<%=entity.getSum() %>}</td>		
 				<%
 			}
 			%></tr>
+			<%
+
+			
+						for(SalesAnalyticsModel entity: list) {
+				System.out.println(entity.getName() + entity.getSum());
+			}/*
+			String nameCheck = "";
+			boolean endOfRow = true;
+			for(SalesAnalyticsModel entity : list) {
+				if(!nameCheck.equals(entity.getName()) && endOfRow) {
+					nameCheck = entity.getName();
+					%>
+					<tr>
+					<td><b><%=entity.getName()%></b><br/>
+					<%=entity.getSum()%></td>
+					
+					<% 
+					endOfRow = false;
+					continue;
+				}
+				if(nameCheck.equals(entity.getName()) && !endOfRow) {
+					endOfRow = true;
+					%>
+					</tr>
+					<% 
+					continue;
+				}				
+				
+				%>
+				<td><b><%=entity.getName()%></b><br/>
+				<%=entity.getSum()%></td>
+				
+				<% 		
+			}*/
+			%>
 			</table><%-- </c:if>--%></div>
 		</td>
 		</table>
