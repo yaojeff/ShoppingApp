@@ -8,6 +8,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import ucsd.shoppingApp.models.SalesAnalyticsModel;
+import ucsd.shoppingApp.models.CustomerAnalyticsModel;
+import ucsd.shoppingApp.models.StateAnalyticsModel;
 
 public class SalesAnalyticsDAO {
 	private Connection con;
@@ -69,8 +71,12 @@ public class SalesAnalyticsDAO {
 //			pstmt.setInt(1, cate_id);
 			rs = pstmt.executeQuery();
 			
-			while(rs.next())
-				result.add(new SalesAnalyticsModel(rs));
+			while(rs.next()) {
+				if(header.equalsIgnoreCase("customer"))
+					result.add(new CustomerAnalyticsModel(rs));
+				else
+					result.add(new StateAnalyticsModel(rs));
+			}
 			return result;
 		} catch (SQLException e) {
 			e.printStackTrace();

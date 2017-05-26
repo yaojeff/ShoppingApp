@@ -52,7 +52,7 @@ public class AnalyticsController extends HttpServlet{
 				int cate_id = Integer.parseInt(request.getParameter("category"));
 			
 				ArrayList<SalesAnalyticsModel> list = entity.filterList(row_header, order, cate_id);
-				System.out.println(list.size());
+				//System.out.println(list.size()); TODO remove debugging message
 				if(list.size() == 0) zeroresults = true;
 				if(zeroresults == false) request.setAttribute("pres", 1);
 				if(zeroresults == true) request.setAttribute("zeroresults", 1);

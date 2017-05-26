@@ -89,12 +89,12 @@
 			ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 			if(request.getAttribute("list") != null) 
 				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("list");
-			System.out.println(list.size());
+			//System.out.println(list.size()); TODO remove debuging 
 			for (SalesAnalyticsModel entity : list) {
 				//System.out.println(entity.getCustomer());
 			%>
 				<tr>
-					<td><%=entity.getCustomer() %> </td>
+					<td><%=entity.getName() %> </td>
 					<td><%=entity.getProduct() %> </td>
 					<td><%=entity.getSum() %> </td>	
 				</tr>
