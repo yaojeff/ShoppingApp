@@ -28,7 +28,7 @@
 			<h3>Sales Analytics</h3>
 			<form method="GET" action="AnalyticsController">
 			<%
-			if(request.getSession().getAttribute("sess_first_page") == null ) {
+			if(request.getAttribute("sess_first_page") == null ) {
 				int category_id = -1;
 				if(request.getSession().getAttribute("sess_cate_id") != null) {
 					category_id = (int)request.getSession().getAttribute("sess_cate_id");
@@ -85,8 +85,17 @@
 				<h4> No results found </h4>
 			</c:if>
 			<c:if test="${pres==1}">
-				<table border='10'>
-				
+			<c:if test="${endRow!=1 || endCol!=1}">
+				<form method="GET" action="AnalyticsController">
+				<c:if test="${endCol!=1}">
+				<input type="submit" value="More ProductS" name="action">
+				</c:if>
+				<c:if test="${endRow!=1}">
+				<input type="submit" value="More Rows" name="action">
+				</c:if>
+				</form>
+			</c:if>		
+			<table border='10'>
 			<%
 			ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 			ArrayList<SalesAnalyticsModel> header = new ArrayList<SalesAnalyticsModel>();
@@ -100,7 +109,7 @@
 			<%
 			for(SalesAnalyticsModel entity : header) {
 				%>
-				<td><center><b><%=entity.getHName() %></b><br/>{$<%=entity.getSum() %>}</center></td>		
+				<td><center><b><%=entity.getHName() %></b><br/>($<%=entity.getSum() %>)</center></td>		
 				<%
 			}
 			%></tr>
@@ -118,7 +127,7 @@
 					%>
 					<tr>
 					<td><center><b><%=entity.getName()%></b><br/>
-					{$<%=entity.getSum()%>}</center></td>
+					($<%=entity.getSum()%>)</center></td>
 					
 					<% 
 					endOfRow = false;

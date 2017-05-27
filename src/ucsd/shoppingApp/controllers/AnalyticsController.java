@@ -47,18 +47,39 @@ public class AnalyticsController extends HttpServlet{
 		if(request.getParameter("action") != null) {	
 			try {
 				HttpSession session = request.getSession();
-				String row_header = request.getParameter("row_header");
-				String order = request.getParameter("order");
-				int cate_id = Integer.parseInt(request.getParameter("cate"));
+				String row_header;
+				String order;
+				int cate_id;	
+				if(request.getParameter("cate") != null) {
+					entity.clear();
+					row_header = request.getParameter("row_header");
+					order = request.getParameter("order");
+					cate_id = Integer.parseInt(request.getParameter("cate"));
+					session.setAttribute("row_header", row_header);
+					session.setAttribute("order", order);
+					session.setAttribute("sess_cate_id", cate_id);
+				}
+				else {
+					if(request.getAttribute("sess_first_page") == null)
+						request.setAttribute("sess_first_page", true);
+					row_header = (String)session.getAttribute("row_header");
+					order = (String)session.getAttribute("order");
+					cate_id = (int)session.getAttribute("sess_cate_id");
+				}
+				if(request.getParameter("action").equalsIgnoreCase("More Products"))
+					entity.updateOffset("colUpdate");
+				else if(request.getParameter("action").equalsIgnoreCase("More Rows"))
+					entity.updateOffset("rowUpdate");
 				ArrayList<SalesAnalyticsModel> header = this.Filterhead(order, cate_id);			
 				ArrayList<SalesAnalyticsModel> list = this.Filterbody(row_header, order, cate_id);
 				//System.out.println(list.size()); TODO remove debugging message
 				if(list.size() == 0) zeroresults = true;
 				if(zeroresults == false) request.setAttribute("pres", 1);
 				if(zeroresults == true) request.setAttribute("zeroresults", 1);
+				if(entity.endCol()) request.setAttribute("endCol", 1);
+				if(entity.endRow()) request.setAttribute("endRow", 1);
 				request.setAttribute("body", list);
 				request.setAttribute("header", header);
-				session.setAttribute("sess_cate_id", cate_id);
 				RequestDispatcher rd = request.getRequestDispatcher("salesAnalytics.jsp");
 				rd.forward(request, response);
 			} catch(NumberFormatException e) {
