@@ -8,8 +8,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import ucsd.shoppingApp.models.SalesAnalyticsModel;
-import ucsd.shoppingApp.models.CustomerAnalyticsModel;
-import ucsd.shoppingApp.models.StateAnalyticsModel;
 
 public class SalesAnalyticsDAO {
 	private Connection con;
@@ -21,84 +19,84 @@ public class SalesAnalyticsDAO {
 	private int colOffset;
 	
 	private static final String TOPK_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.product_name, p.id, SUM(pr.price * pr.quantity) as rs"
+			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.product_name, p.id) a on a.product_name ="
-		    + " p.product_name ORDER BY rs DESC NULLS LAST LIMIT 10";
+		    + " AND sh.is_purchased = true GROUP BY p.id) a on a.id ="
+		    + " p.id ORDER BY rs DESC NULLS LAST LIMIT 10";
 	
 	private static final String TOPK_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM person as p LEFT JOIN("
-			+ " SELECT p.person_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " SELECT p.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id"
-            + " GROUP BY p.id) a on p.person_name = a.name ORDER BY rs DESC NULLS LAST LIMIT 20";
+            + " GROUP BY p.id) a on p.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
 	
 	private static final String TOPK_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.state_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " GROUP BY st.state_name) a on st.state_name = a.name ORDER BY rs DESC NULLS LAST LIMIT 20";
+            + " GROUP BY st.id) a on st.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
 	
 	private static final String ALPH_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.person_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id"
-            + " GROUP BY p.id) a on p.person_name = a.name ORDER BY p.person_name LIMIT 20";
+            + " GROUP BY p.id) a on p.id = a.id ORDER BY p.person_name LIMIT 20";
 	
 	private static final String ALPH_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.state_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " GROUP BY st.state_name) a on st.state_name = a.name ORDER BY st.state_name LIMIT 20";
+            + " GROUP BY st.id) a on st.id = a.id ORDER BY st.state_name LIMIT 20";
 	
 	private static final String ALPH_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.product_name, p.id, SUM(pr.price * pr.quantity) as rs"
+			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.product_name, p.id) a on p.id = a.id"
+		    + " AND sh.is_purchased = true GROUP BY p.id) a on p.id = a.id"
 		    + " ORDER BY p.product_name LIMIT 10";
 	
 	private static final String TOPK_CATE_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.product_name, p.id, SUM(pr.price * pr.quantity) as rs"
+			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.product_name, p.id) a  on p.id = a.id"
+		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.id) a  on p.id = a.id"
 		    + " ORDER BY rs DESC NULLS LAST LIMIT 10";
 	
 	private static final String TOPK_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.state_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st, product as pro"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
             + " AND pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY st.state_name) a on st.state_name = a.name ORDER BY rs DESC NULLS LAST LIMIT 20";
+            + " GROUP BY st.id) a on st.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
 	
 	private static final String ALPH_CATE_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.product_name, p.id, SUM(pr.price * pr.quantity) as rs"
+			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.product_name, p.id) a on"
+		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.id) a on"
 		    + " p.id = a.id ORDER BY p.product_name LIMIT 10";
 	
 	private static final String ALPH_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.state_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st, product as pro"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
             + " AND pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY st.state_name) a on st.state_name = a.name ORDER BY st.state_name LIMIT 20";
+            + " GROUP BY st.id) a on st.id = a.id ORDER BY st.state_name LIMIT 20";
 	
 	private static final String TOPK_CATE_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.person_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND"
             + " pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY p.id) a on a.name = p.person_name ORDER BY rs DESC NULLS LAST LIMIT 20";
+            + " GROUP BY p.id) a on a.id = p.id ORDER BY rs DESC NULLS LAST LIMIT 20";
 	
 	private static final String ALPH_CATE_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.person_name as name, SUM(pr.price * pr.quantity) as rs"
+			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
             + " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro"
             + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND"
             + " pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY p.id) a on a.name = p.person_name ORDER BY p.person_name LIMIT 20";
+            + " GROUP BY p.id) a on a.id = p.id ORDER BY p.person_name LIMIT 20";
 	
 	private static final String BODY_CUS = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
 			+ " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro WHERE p.id = s.person_id"
@@ -134,11 +132,12 @@ public class SalesAnalyticsDAO {
 	}
 	
 	public boolean endRow() {
-		return rowH.size() < (rowOffset + 20);
+		//System.out.println(rowH.size());
+		return rowH.size() < 20;
 	}
 	
 	public boolean endCol() {
-		return header.size() < (colOffset + 10);
+		return header.size() < 10;
 	}
 	
 	public ArrayList<SalesAnalyticsModel> filterB(String row_header) throws SQLException{

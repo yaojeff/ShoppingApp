@@ -20,7 +20,7 @@ public class SalesAnalyticsModel {
 		try {
 			this.name = rs.getString("name");
 			this.sum = rs.getDouble("rs");
-			//System.out.println(name);
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
