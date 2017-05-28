@@ -60,7 +60,7 @@ public class SalesAnalyticsDAO {
 			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.id) a  on p.id = a.id"
+		    + " AND sh.is_purchased = true GROUP BY p.id) a  on p.id = a.id WHERE p.category_id = ?"
 		    + " ORDER BY rs DESC NULLS LAST LIMIT 10";
 	
 	private static final String TOPK_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
@@ -74,8 +74,8 @@ public class SalesAnalyticsDAO {
 			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
 		    + " FROM product as p, products_in_cart as pr,"
 		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true AND p.category_id = ? GROUP BY p.id) a on"
-		    + " p.id = a.id ORDER BY p.product_name LIMIT 10";
+		    + " AND sh.is_purchased = true GROUP BY p.id) a on"
+		    + " p.id = a.id WHERE p.category_id = ?ORDER BY p.product_name LIMIT 10";
 	
 	private static final String ALPH_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
 			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
