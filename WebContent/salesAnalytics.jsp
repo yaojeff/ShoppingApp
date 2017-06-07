@@ -39,22 +39,6 @@
 
 				<table>
 				<tr><td>
-				Row header : 
-				</td><td> 
-				<select required name="row_header">
-					<option value = "Customer">Customer</option>
-					<option value = "State">State</option>
-				</select>
-				</td></tr>
-				<tr><td>
-				Order : 
-				</td><td> 
-				<select required name="order">
-					<option value = "alph">Alphabetical</option>
-					<option value = "topK">Top-K</option>
-				</select>
-				</td></tr>
-				<tr><td>
 				Category : 
 				</td><td> 
 				<select name="cate">
@@ -85,31 +69,24 @@
 				<h4> No results found </h4>
 			</c:if>
 			<c:if test="${pres==1}">
-			<c:if test="${endRow!=1 || endCol!=1}">
-				<form method="GET" action="AnalyticsController">
-				<c:if test="${endCol!=1}">
-				<input type="submit" value="More ProductS" name="action">
-				</c:if>
-				<c:if test="${endRow!=1}">
-				<input type="submit" value="More Rows" name="action">
-				</c:if>
-				</form>
-			</c:if>		
+			<form method="GET" action="AnalyticsController">
+			<input type="submit" value="Refresh" name="action">
+			</form>
+
 			<table border='10'>
 			<%
 			ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 			ArrayList<SalesAnalyticsModel> header = new ArrayList<SalesAnalyticsModel>();
-			if(request.getAttribute("header") != null) 
-				header = (ArrayList<SalesAnalyticsModel>) request.getAttribute("header");
 			if(request.getAttribute("body") != null) 
 				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("body");
 			//System.out.println(list.size()); TODO remove debuging 
 			%>
 			<tr><td></td>
 			<%
-			for(SalesAnalyticsModel entity : header) {
+			for(int i = 0; i < 50; i++) {
+				SalesAnalyticsModel entity = list.get(i);
 				%>
-				<td><center><b><%=entity.getHName() %></b><br/>($<%=entity.getSum() %>)</center></td>		
+				<td><center><b><%=entity.getProductName() %></b><br/>($<%=entity.getProductSum() %>)</center></td>		
 				<%
 			}
 			%></tr>
@@ -119,33 +96,31 @@
 			/*for(SalesAnalyticsModel entity: list) {
 				System.out.println(entity.getName() + entity.getSum());
 			}*/
-			String nameCheck = "";
-			boolean endOfRow = true;
+			int counter = 0;
 			for(SalesAnalyticsModel entity : list) {
-				if(!nameCheck.equals(entity.getName()) && endOfRow) {
-					nameCheck = entity.getName();
+				if(counter == 0) {
 					%>
 					<tr>
-					<td><center><b><%=entity.getName()%></b><br/>
-					($<%=entity.getSum()%>)</center></td>
+					<td><center><b><%=entity.getStateName()%></b><br/>
+					($<%=entity.getStateSum()%>)</center></td>
+					<td><center>$<%=entity.getCellSum()%></center></td>	
 					
-					<% 
-					endOfRow = false;
-					continue;
-				}
-				if(nameCheck.equals(entity.getName()) && !endOfRow) {
-					endOfRow = true;
+					<% 					
+				}else {
 					%>
-					</tr>
-					<% 
-					continue;
-				}				
-				
-				%>
-				<td>
-				<center>$<%=entity.getSum()%></center></td>
-				
-				<% 		
+					<td><center>$<%=entity.getCellSum()%></center></td>		
+					<%
+					if(counter == 49) {
+						counter = 0;
+						%>
+						</tr>
+						<%
+						continue;
+					}
+				}
+				counter = (counter+1);
+
+						
 			}
 			%>
 			</table></c:if></div>

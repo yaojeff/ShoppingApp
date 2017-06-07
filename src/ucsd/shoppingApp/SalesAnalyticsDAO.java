@@ -15,162 +15,123 @@ public class SalesAnalyticsDAO {
 	private ArrayList<Integer> header;
 	private ArrayList<SalesAnalyticsModel> rowH;
 	
-	private int rowOffset;
-	private int colOffset;
 	
-	private static final String TOPK_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-		    + " FROM product as p, products_in_cart as pr,"
-		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.id) a on a.id ="
-		    + " p.id ORDER BY rs DESC NULLS LAST LIMIT 10";
+	private static final String TOPK = "with overall_table as"
+			+ " (select pc.product_id,c.state_id,sum(pc.price*pc.quantity) as amount"
+			+ " from products_in_cart pc"
+			+ " inner join shopping_cart sc on (sc.id = pc.cart_id and sc.is_purchased = true)"
+			+ " inner join product p on (pc.product_id = p.id)"
+			+ " inner join person c on (sc.person_id = c.id)"
+			+ " group by pc.product_id,c.state_id),"
+			+ " top_state as (select state_id, sum(amount) as dollar from ("
+			+ " select state_id, amount from overall_table"
+			+ " UNION ALL"
+			+ " select id as state_id, 0.0 as amount from state"
+			+ " ) as state_union"
+			+ " group by state_id order by dollar desc"
+			+ " ),top_n_state as (select row_number() over(order by dollar desc) as state_order, state_id,"
+			+ " dollar from top_state),top_prod as (select product_id, sum(amount) as dollar from ("
+			+ " select product_id, amount from overall_table"
+			+ " UNION ALL select id as product_id, 0.0 as amount from product"
+			+ " ) as product_union"
+			+ " group by product_id order by dollar desc limit 50"
+			+ " ),top_n_prod as (select row_number() over(order by dollar desc) as product_order, product_id,"
+			+ " dollar from top_prod) select s.state_name, pr.product_name, "
+			+ " COALESCE(ot.amount, 0.0) as cell_sum, ts.dollar as state_sum, tp.dollar as product_sum"
+			+ " from top_n_prod tp CROSS JOIN top_n_state ts LEFT OUTER JOIN overall_table ot"
+			+ " ON ( tp.product_id = ot.product_id and ts.state_id = ot.state_id)"
+			+ " inner join state s ON ts.state_id = s.id"
+			+ " inner join product pr ON tp.product_id = pr.id"
+			+ " order by ts.state_order, tp.product_order";
 	
-	private static final String TOPK_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM person as p LEFT JOIN("
-			+ " SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id"
-            + " GROUP BY p.id) a on p.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
-	
-	private static final String TOPK_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " GROUP BY st.id) a on st.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
-	
-	private static final String ALPH_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id"
-            + " GROUP BY p.id) a on p.id = a.id ORDER BY p.person_name LIMIT 20";
-	
-	private static final String ALPH_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " GROUP BY st.id) a on st.id = a.id ORDER BY st.state_name LIMIT 20";
-	
-	private static final String ALPH_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-		    + " FROM product as p, products_in_cart as pr,"
-		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.id) a on p.id = a.id"
-		    + " ORDER BY p.product_name LIMIT 10";
-	
-	private static final String TOPK_CATE_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-		    + " FROM product as p, products_in_cart as pr,"
-		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.id) a  on p.id = a.id WHERE p.category_id = ?"
-		    + " ORDER BY rs DESC NULLS LAST LIMIT 10";
-	
-	private static final String TOPK_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st, product as pro"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " AND pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY st.id) a on st.id = a.id ORDER BY rs DESC NULLS LAST LIMIT 20";
-	
-	private static final String ALPH_CATE_H = "SELECT p.product_name as name, p.id, COALESCE(a.rs,0) as rs FROM"
-			+ " product p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-		    + " FROM product as p, products_in_cart as pr,"
-		    + " shopping_cart as sh WHERE p.id = pr.product_id AND pr.cart_id = sh.id"
-		    + " AND sh.is_purchased = true GROUP BY p.id) a on"
-		    + " p.id = a.id WHERE p.category_id = ?ORDER BY p.product_name LIMIT 10";
-	
-	private static final String ALPH_CATE_S_ROW = "SELECT st.state_name as name, COALESCE(a.rs, 0) as rs FROM"
-			+ " state st LEFT JOIN (SELECT st.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, state as st, product as pro"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND p.state_id = st.id"
-            + " AND pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY st.id) a on st.id = a.id ORDER BY st.state_name LIMIT 20";
-	
-	private static final String TOPK_CATE_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND"
-            + " pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY p.id) a on a.id = p.id ORDER BY rs DESC NULLS LAST LIMIT 20";
-	
-	private static final String ALPH_CATE_C_ROW = "SELECT p.person_name as name, COALESCE(a.rs,0) as rs FROM"
-			+ " person as p LEFT JOIN (SELECT p.id, SUM(pr.price * pr.quantity) as rs"
-            + " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro"
-            + " WHERE p.id = s.person_id AND s.is_purchased = true AND pr.cart_id = s.id AND"
-            + " pro.id = pr.product_id AND pro.category_id = ?"
-            + " GROUP BY p.id) a on a.id = p.id ORDER BY p.person_name LIMIT 20";
-	
-	private static final String BODY_CUS = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
-			+ " FROM person as p, shopping_cart as s, products_in_cart as pr, product as pro WHERE p.id = s.person_id"
-			+ " AND s.is_purchased = true AND pr.cart_id = s.id AND pro.id = pr.product_id"
-			+ " AND pro.id = ? AND p.person_name = ? GROUP by p.id, pro.id";
-	
-	private static final String BODY_SAT = "SELECT pro.product_name as name, COALESCE(SUM(pr.price * pr.quantity),0) as rs "
-			+ " FROM person as p, state as st, shopping_cart as s, products_in_cart as pr, product as pro WHERE p.id = s.person_id"
-			+ " AND s.is_purchased = true AND pr.cart_id = s.id AND pro.id = pr.product_id AND st.id = p.state_id"
-			+ " AND pro.id = ? AND st.state_name = ? GROUP by pro.product_name";
+	private static final String TOPK_CATE = "with overall_table as"
+			+ " (select pc.product_id,c.state_id,sum(pc.price*pc.quantity) as amount"
+			+ " from products_in_cart pc"
+			+ " inner join shopping_cart sc on (sc.id = pc.cart_id and sc.is_purchased = true)"
+			+ " inner join product p on (pc.product_id = p.id) AND (pc.category_id = ?)"
+			+ " inner join person c on (sc.person_id = c.id)"
+			+ " group by pc.product_id,c.state_id),"
+			+ " top_state as (select state_id, sum(amount) as dollar from ("
+			+ " select state_id, amount from overall_table"
+			+ " UNION ALL"
+			+ " select id as state_id, 0.0 as amount from state"
+			+ " ) as state_union"
+			+ " group by state_id order by dollar desc"
+			+ " ),top_n_state as (select row_number() over(order by dollar desc) as state_order, state_id,"
+			+ " dollar from top_state),top_prod as (select product_id, sum(amount) as dollar from ("
+			+ " select product_id, amount from overall_table"
+			+ " UNION ALL select id as product_id, 0.0 as amount from product"
+			+ " ) as product_union"
+			+ " group by product_id order by dollar desc limit 50"
+			+ " ),top_n_prod as (select row_number() over(order by dollar desc) as product_order, product_id,"
+			+ " dollar from top_prod) select s.state_name, pr.product_name, "
+			+ " COALESCE(ot.amount, 0.0) as cell_sum, ts.dollar as state_sum, tp.dollar as product_sum"
+			+ " from top_n_prod tp CROSS JOIN top_n_state ts LEFT OUTER JOIN overall_table ot"
+			+ " ON ( tp.product_id = ot.product_id and ts.state_id = ot.state_id)"
+			+ " inner join state s ON ts.state_id = s.id"
+			+ " inner join product pr ON tp.product_id = pr.id"
+			+ " order by ts.state_order, tp.product_order";
 	
 	public SalesAnalyticsDAO(Connection con) {
 		this.rowH = new ArrayList<SalesAnalyticsModel>();
 		this.header = new ArrayList<Integer>();
 		this.con = con;
-		this.colOffset = this.rowOffset = 0;
-	}
-	
-	public void updateOffset(String type) {
-		if(type.equalsIgnoreCase("rowUpdate")) {
-			this.rowOffset += 20;
-		} else {
-			this.colOffset += 10;
-		}	
-	}
-	
-	private String appendStmt(String stmt, int offset) {
-		return stmt+" OFFSET "+offset;
-	}
-	
-	public void clear() {
-		rowOffset = colOffset = 0;
-	}
-	
-	public boolean endRow() {
-		//System.out.println(rowH.size());
-		return rowH.size() < 20;
-	}
+	}		
 	
 	public boolean endCol() {
-		return header.size() < 10;
+		return header.size() < 50;
 	}
 	
-	public ArrayList<SalesAnalyticsModel> filterB(String row_header) throws SQLException{
+	public ArrayList<SalesAnalyticsModel> filter() throws SQLException{
+		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
+		ResultSet rs = null;
+		Statement stmt = null;
+		StringBuilder sb = null;
+		sb = new StringBuilder(TOPK);
+		System.out.println(sb.toString());
+		try {
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(sb.toString());
+		while(rs.next())
+			list.add(new SalesAnalyticsModel(rs));
+					
+		} catch(SQLException e) {
+			e.printStackTrace();
+			throw e;
+		}
+
+		if(rs != null) rs.close();
+		if(stmt != null) {
+			try {
+				stmt.close();
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return list;
+	}
+	
+	
+	
+	public ArrayList<SalesAnalyticsModel> filterCate(int cate_id) throws SQLException{
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 		ResultSet rs = null;
 		PreparedStatement pstmt = null;
 		StringBuilder sb = null;
-		if(row_header.equalsIgnoreCase("customer"))
-			sb = new StringBuilder(BODY_CUS);
-		else
-			sb = new StringBuilder(BODY_SAT);
+		sb = new StringBuilder(TOPK);
 		System.out.println(sb.toString());
-		for(SalesAnalyticsModel entity : rowH) {
-			list.add(new SalesAnalyticsModel(entity.getName(), entity.getSum()));
-			for(Integer t : header) {
-				try {
-					pstmt = con.prepareStatement(sb.toString());
-					pstmt.setInt(1, t);
-					pstmt.setString(2, entity.getName());
-					rs = pstmt.executeQuery();
-
-					if(rs.next())
-						list.add(new SalesAnalyticsModel(rs));
-					else
-						list.add(new SalesAnalyticsModel("et", 0.0));
+		try {
+			pstmt = con.prepareStatement(sb.toString());
+			pstmt.setInt(1, cate_id);
+			rs = pstmt.executeQuery();
+		while(rs.next())
+			list.add(new SalesAnalyticsModel(rs));
 					
-				} catch(SQLException e) {
-					e.printStackTrace();
-					throw e;
-				}
-			}
-			list.add(new SalesAnalyticsModel(entity.getName(), entity.getSum()));
+		} catch(SQLException e) {
+			e.printStackTrace();
+			throw e;
 		}
+
 		if(rs != null) rs.close();
 		if(pstmt != null) {
 			try {
@@ -183,152 +144,7 @@ public class SalesAnalyticsDAO {
 	}
 	
 	
-	public ArrayList<SalesAnalyticsModel> filterH(String order) throws SQLException{
-		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
-		StringBuilder sb;
-		if(order.equalsIgnoreCase("topK"))
-			sb = new StringBuilder(appendStmt(TOPK_H, colOffset));
-		else
-			sb = new StringBuilder(appendStmt(ALPH_H, colOffset));
-		
-		Statement stmt = null;
-		ResultSet rs = null;
-		try {
-			stmt = con.createStatement();
-			System.out.println(sb.toString()); //TODO remove debugging message
-			rs = stmt.executeQuery(sb.toString());
-			while(rs.next()) {
-				header.add(rs.getInt("id"));
-				list.add(new SalesAnalyticsModel(rs));
-			}
-			return list;
-		}catch (SQLException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			if (rs != null) 
-				rs.close();
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	public ArrayList<SalesAnalyticsModel> filterHC(String order, int cate_id) throws SQLException{
-		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
-		StringBuilder sb;
-		if(order.equalsIgnoreCase("topK"))
-			sb = new StringBuilder(appendStmt(TOPK_CATE_H, colOffset));
-		else
-			sb = new StringBuilder(appendStmt(ALPH_CATE_H, colOffset));
-		
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = con.prepareStatement(sb.toString());
-			pstmt.setInt(1, cate_id);
-			System.out.println(sb.toString()); //TODO remove debugging message
-			rs = pstmt.executeQuery();
-			while(rs.next()) {
-				header.add(rs.getInt("id"));
-				list.add(new SalesAnalyticsModel(rs));
-			}
-			return list;
-		}catch (SQLException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			if (rs != null) 
-				rs.close();
-			if (pstmt != null) {
-				try {
-					pstmt.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}		
-	}
-	
-	public void rowQueryCustomer(String order, int cate_id) throws SQLException{
-		StringBuilder sb;
-		if(order.equalsIgnoreCase("topK") && cate_id > 0)
-			sb = new StringBuilder(appendStmt(TOPK_CATE_C_ROW,rowOffset));
-		else if (order.equalsIgnoreCase("alph") && cate_id > 0)
-			sb = new StringBuilder(appendStmt(ALPH_CATE_C_ROW,rowOffset));
-		else if (order.equalsIgnoreCase("topK") && cate_id <= 0)
-			sb = new StringBuilder(appendStmt(TOPK_C_ROW,rowOffset));
-		else
-			sb = new StringBuilder(appendStmt(ALPH_C_ROW,rowOffset));
-		
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = con.prepareStatement(sb.toString());
-			if(cate_id > 0)
-				pstmt.setInt(1, cate_id);
-			System.out.println(sb.toString()); //TODO remove debugging message
-			rs = pstmt.executeQuery();
-			while(rs.next()) {
-				rowH.add(new SalesAnalyticsModel(rs));
-			}
-		}catch (SQLException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			if (rs != null) 
-				rs.close();
-			if (pstmt != null) {
-				try {
-					pstmt.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	public void rowQueryState(String order, int cate_id) throws SQLException{
-		StringBuilder sb;
-		if(order.equalsIgnoreCase("topK") && cate_id > 0)
-			sb = new StringBuilder(appendStmt(TOPK_CATE_S_ROW,rowOffset));
-		else if (order.equalsIgnoreCase("alph") && cate_id > 0)
-			sb = new StringBuilder(appendStmt(ALPH_CATE_S_ROW,rowOffset));
-		else if (order.equalsIgnoreCase("topK") && cate_id <= 0)
-			sb = new StringBuilder(appendStmt(TOPK_S_ROW,rowOffset));
-		else
-			sb = new StringBuilder(appendStmt(ALPH_S_ROW,rowOffset));
-		
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = con.prepareStatement(sb.toString());
-			if(cate_id > 0)
-				pstmt.setInt(1, cate_id);
-			System.out.println(sb.toString()); //TODO remove debugging message
-			rs = pstmt.executeQuery();
-			while(rs.next()) {
-				rowH.add(new SalesAnalyticsModel(rs));
-			}
-		}catch (SQLException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			if (rs != null) 
-				rs.close();
-			if (pstmt != null) {
-				try {
-					pstmt.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}			
-	}
+
 	
 	public void reset() {
 		rowH.clear();

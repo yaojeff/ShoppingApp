@@ -4,22 +4,31 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SalesAnalyticsModel {
-	private String name;
-	private Double sum;
+	private String state_name;
+	private String product_name;
+	private Double state_sum;
+	private Double product_sum;
+	private Double cell_sum;
 	
-	public String getHName() { 
-		if(name.length() > 10) return name.substring(0, 10); 
-		else return name;
+	public String getProductName() { 
+		if(product_name.length() > 10) return product_name.substring(0, 10); 
+		else return product_name;
 	}
-	public String getName() { return name; }
-	public Double getSum() { return sum; }
-	public void setName(String n) { name = n;}
-	public void setSum(Double s) { sum = s;}
+	public String getStateName() { return state_name; }
+	public Double getStateSum() { return state_sum; }
+	public Double getProductSum() { return product_sum; }
+	public Double getCellSum() { return cell_sum; }
+	public void setStateName(String n) { state_name = n;}
+	public void setProductName(String n) { product_name = n;}
 	
 	public SalesAnalyticsModel(ResultSet rs) throws SQLException {
 		try {
-			this.name = rs.getString("name");
-			this.sum = rs.getDouble("rs");
+			this.state_name = rs.getString("state_name");
+			this.product_name = rs.getString("product_name");
+			this.state_sum = rs.getDouble("state_sum");
+			this.cell_sum = rs.getDouble("cell_sum");
+			this.product_sum = rs.getDouble("product_sum");
+			
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -27,9 +36,5 @@ public class SalesAnalyticsModel {
 		}
 	}
 	
-	public SalesAnalyticsModel(String n, Double s) {
-		name = n;
-		sum = s;
-	}
 
 }
