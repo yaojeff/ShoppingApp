@@ -8,6 +8,25 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Sales Analytics</title>
+<script type="text/javascript">
+function refresh(cat,name) {
+	var xhttp;
+	xhttp = new XMLHttpRequest();
+	var url = "refresh.jsp";
+	url = url + "?cate=" + cat+"?name=" + name;
+	if(document.getElementById("GuamPROD_258").style.color == 0xff0000)
+		document.getElementById("dataTable").style.color = 0x0000ff;
+	else document.getElementById("GuamPROD_258").style.color = 0xff0000
+	xhttp.onreadystatechange = function() {
+		if(this.readyState == 4) {
+			
+			document.getElementById("GuamPROD_258").innerHTML = parseInt(document.getElementById("GuamPROD_258").innerHTML,10) * 2;
+		}
+	};
+	xhttp.open("GET", url,true);
+	xhttp.send(null);
+}
+</script>
 </head>
 <body>
 	<% if(session.getAttribute("roleName" ) != null) { 
@@ -26,54 +45,52 @@
 			<td>
 				<h3>Hello <%= session.getAttribute("personName") %></h3>
 			<h3>Sales Analytics</h3>
-			<form method="GET" action="AnalyticsController">
+
 			<%
-			if(request.getAttribute("sess_first_page") == null ) {
-				int category_id = -1;
-				if(request.getSession().getAttribute("sess_cate_id") != null) {
-					category_id = (int)request.getSession().getAttribute("sess_cate_id");
-				}
-				System.out.println(category_id);
+
+			int category_id = -1;
+			String name = session.getAttribute("personName").toString();
+			if(request.getSession().getAttribute("sess_cate_id") != null) {
+				category_id = (int)request.getSession().getAttribute("sess_cate_id");
+			}
 			
 			%>
+			<form method="GET" action="AnalyticsController">
+			<table>
+			<tr><td>
+			Category : 
+			</td><td> 
+			<select name="cate">
+				<option value="-1">All</option>
+				<%
+					for (CategoryModel cat : category_list) {
+				%>
+				<option value="<%=cat.getId()%>" <%if (cat.getId() == category_id) { %> selected="selected" <%} %>> 
+					<%=cat.getCategoryName()%>
+				</option>
+				<%
+					}
+				%>
+			</select>
+			</td></tr>
+			<tr>
+				<td>
 
-				<table>
-				<tr><td>
-				Category : 
-				</td><td> 
-				<select name="cate">
-					<option value="-1">All</option>
-					<%
-						for (CategoryModel cat : category_list) {
-					%>
-					<option value="<%=cat.getId()%>" <%if (cat.getId() == category_id) { %> selected="selected" <%} %>> 
-						<%=cat.getCategoryName()%>
-					</option>
-					<%
-						}
-					%>
-				</select>
-				</td></tr>
-				<tr>
-					<td>
-						<input type="submit" value="Run Query" name="action">
-					</td>
+					<input type="submit" value="Run Query" name="action">
+
+				</td>
 				</tr>
 				</table>
 			</form>
-			<%
-			}
-			%>
 			<div id="result">
 			<c:if test="${zeroresults==1}">
 				<h4> No results found </h4>
 			</c:if>
 			<c:if test="${pres==1}">
-			<form method="GET" action="AnalyticsController">
-			<input type="submit" value="Refresh" name="action">
-			</form>
 
-			<table border='10'>
+			<input type="submit" onclick= "refresh(<%=category_id %>,<%=name %>)" value="Refresh" name="action">
+
+			<table border='10' id='dataTable'>
 			<%
 			ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
 			ArrayList<SalesAnalyticsModel> header = new ArrayList<SalesAnalyticsModel>();
@@ -81,12 +98,12 @@
 				list = (ArrayList<SalesAnalyticsModel>) request.getAttribute("body");
 			//System.out.println(list.size()); TODO remove debuging 
 			%>
-			<tr><td></td>
+			<tr><td id="test"></td>
 			<%
 			for(int i = 0; i < 50; i++) {
 				SalesAnalyticsModel entity = list.get(i);
 				%>
-				<td><center><b><%=entity.getProductName() %></b><br/>($<%=entity.getProductSum() %>)</center></td>		
+				<td><center><b><%=entity.getProductName() %></b><br/>($<Label id=<%=entity.getProductName()%>><%=entity.getProductSum() %></Label>)</center></td>		
 				<%
 			}
 			%></tr>
@@ -101,14 +118,14 @@
 				if(counter == 0) {
 					%>
 					<tr>
-					<td><center><b><%=entity.getStateName()%></b><br/>
+					<td ><center><b><Label id=<%=entity.getStateName() %>><%=entity.getStateName()%></Label></b><br/>
 					($<%=entity.getStateSum()%>)</center></td>
-					<td><center>$<%=entity.getCellSum()%></center></td>	
+					<td ><center>$<Label id=<%=entity.getStateName()+entity.getProductName() %>><%=entity.getCellSum()%></Label></center></td>	
 					
 					<% 					
 				}else {
 					%>
-					<td><center>$<%=entity.getCellSum()%></center></td>		
+					<td ><center>$<Label id=<%=entity.getStateName()+entity.getProductName() %>><%=entity.getCellSum()%></Label></center></td>		
 					<%
 					if(counter == 49) {
 						counter = 0;
@@ -135,5 +152,6 @@
 		<h3>Please <a href = "./login.jsp">login</a> before viewing the page</h3>
 	<% }
 	%>
+
 </body>
 </html>

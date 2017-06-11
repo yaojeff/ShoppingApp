@@ -17,8 +17,8 @@
 		}	
 		%>
 		<li><a href='productsearch.jsp'>Products Browsing</a></li>
-		<!-- <li><a href='#'>Product Order</a></li> -->
 		<li><a href='./BuyController'>Buy Shopping Cart</a></li>
+		<li><a href='buyOrders.jsp'>Buy N Products</a></li>
 		<li><a href='./SimilarProductsController?action=pairs'>Similar Products</a></li>
 	<% } %>
 </ul>

@@ -3,6 +3,7 @@ package ucsd.shoppingApp.controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 import javax.servlet.RequestDispatcher;
@@ -39,29 +40,42 @@ public class AnalyticsController extends HttpServlet{
 		}
 	}
 	
+	public String prepareString(String name) {
+		return "do $$ begin"
+				+ " DELETE FROM log_tracing l USING OBSERVED_USER o WHERE l.observed_user_id = o.id AND o.user_name = '" + name + "';"
+				+ " IF NOT EXISTS (SELECT u.id FROM OBSERVED_USER u WHERE u.user_name = '" + name + "') THEN"
+				+ " INSERT INTO OBSERVED_USER (user_name) VALUES ('"+name+"');"
+				+ " ALTER TABLE log_table ENABLE TRIGGER update_logTracing; END IF; end $$";
+	}
+	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 		throws ServletException, IOException {
 		response.setContentType("test/html");
 		boolean zeroresults = false;
-		
-		if(request.getParameter("action") != null) {	
+
+		if(request.getParameter("action").equalsIgnoreCase("Run Query")) {
 			try {
 				HttpSession session = request.getSession();
-				String row_header;
-				String order;
-				int cate_id;	
+				int cate_id;
 				if(request.getParameter("cate") != null) {
+
 					cate_id = Integer.parseInt(request.getParameter("cate"));
 					session.setAttribute("sess_cate_id", cate_id);
 				}
 				else {
+
 					if(request.getAttribute("sess_first_page") == null)
 						request.setAttribute("sess_first_page", true);
+					//System.out.println("In doGet");
 					cate_id = (int)session.getAttribute("sess_cate_id");
+
 				}
-				if(request.getParameter("action").equalsIgnoreCase("Refresh")) {
-					//TODO
-				}		
+				Statement stmt = con.createStatement();
+				String name = session.getAttribute("personName").toString();
+				name = prepareString(name);
+				System.out.println(name);
+				stmt.executeUpdate(name);
+				//System.out.println("In doGet");
 				ArrayList<SalesAnalyticsModel> list = this.Filter(cate_id);
 				//System.out.println(list.size()); TODO remove debugging message
 				if(list.size() == 0) zeroresults = true;
@@ -81,13 +95,10 @@ public class AnalyticsController extends HttpServlet{
 	}
 	
 	private ArrayList<SalesAnalyticsModel> Filter(int cate_id) throws SQLException{
-		entity.reset();
 		ArrayList<SalesAnalyticsModel> list = new ArrayList<SalesAnalyticsModel>();
-		if(cate_id <= 0) {
-			list = entity.filter();
-		} else {
-			list = entity.filterCate(cate_id);
-		}
+		//System.out.println("In doGet");
+		list = entity.filter(cate_id);
+		System.out.println(list.size());
 		return list;
 	}
 }
